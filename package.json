@@ -1,0 +1,19 @@
+{
+    "name": "consistent-installs",
+    "type": "module",
+    "dependencies": {
+        "csv-parser": "^3.0.0",
+        "tar-stream": "^3.1.6",
+        "typescript": "5.x.x"
+    },
+    "devDependencies": {
+        "@types/node": ">=20.6.0",
+        "@types/tar-stream": "^2.2.2"
+    },
+    "scripts": {
+        "build": "npm run build-ts && npm run build-workflow",
+        "build-ts": "mkdir -p dist && npm exec -- tsc",
+        "build-workflow": "sed < workflow_templates/compare.yml -e \"s/__PACKAGE_MANAGERS__/$(node -e 'import(`./dist/runners/all.mjs`).then(ns => console.log(Object.keys(ns).join(`, `)))')/\" > .github/workflows/compare.yml",
+        "start": "npm run build && npm run build-workflow && node ./dist/run.mjs"
+    }
+}

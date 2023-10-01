@@ -1,0 +1,16 @@
+{
+    "include": [
+        "src/**/*"
+    ],
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "moduleDetection": "force",
+        "strict": true,
+        "isolatedModules": true,
+        "target": "ESNext",
+        "outDir": "dist",
+        "types": ["node"],
+        "verbatimModuleSyntax": true
+    }
+}

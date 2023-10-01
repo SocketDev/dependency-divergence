@@ -1,0 +1,57 @@
+name: 'Compare Package Manager Installations'
+
+on:
+  workflow_dispatch:
+    inputs:
+      managers:
+        default: ''
+        type: string
+        description: 'comma separated list of package managers, all if empty, ignores unknowns (values: bun, deno, npm, pnpm, yarn1, yarn3)'
+      cwd:
+        default: '.'
+        type: string
+        description: 'directory with package manifests to compare'
+  workflow_call:
+    inputs:
+      managers:
+        default: ''
+        type: string
+        description: 'comma separated list of package managers, all if empty, ignores unknowns (values: bun, deno, npm, pnpm, yarn1, yarn3)'
+      cwd:
+        default: '.'
+        type: string
+        description: 'directory with package manifests to compare'
+
+jobs:
+  compare:
+    name: "compare installs"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "install-node"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: "install-docker"
+        run: |
+          sudo apt-get install docker-ce docker-ce-cli containerd.io
+      - name: "checkout-harness"
+        uses: "actions/checkout@v4"
+        with:
+          repository: ${{ env.GITHUB_ACTION_REPOSITORY }}
+          path: './harness'
+          submodules: "recursive"
+      - name: "checkout-code"
+        uses: "actions/checkout@v4"
+        with:
+          path: './code'
+          submodules: "recursive"
+      - name: "run"
+        env:
+          PKG_MANAGERS: ${{ inputs.managers }}
+          PKG_CWD: ${{ inputs.cwd }}
+        run: |
+          BIN="$(pwd)/harness/dist/run.mjs"
+          cd ./code
+          node "$BIN" "$PKG_CWD" "$PKG_MANAGERS" > $GITHUB_STEP_SUMMARY
+      
+          
