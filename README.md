@@ -17,7 +17,7 @@ on:
 jobs:
     compare:
         if: ${{ github.event.label.name == 'compare' }}
-        uses: "bmeck/dependency-divergence/.github/workflows/compare.yml@main"
+        uses: "SocketDev/dependency-divergence/.github/workflows/compare.yml@main"
         with:
             managers: "bun,npm" # omit to use all possible options
             cwd: "." # change to your subdirectory in the repo as desired
