@@ -7,6 +7,7 @@ export const config = {
         curl -fsSL https://deno.land/x/install/install.sh | sh
     `,
     install_packages: `
+        export DENO_DIR=/root/.deno/cache
         node -e 'fs.writeFileSync("deps.ts", Object.entries(require("./package.json").dependencies ?? {}).map((e)=>"import \\"npm:"+e[0]+"@"+e[1]+"\\"").join("\\n"))'
         /root/.deno/bin/deno run deps.ts
     `
