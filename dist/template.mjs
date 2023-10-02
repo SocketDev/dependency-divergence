@@ -1,6 +1,6 @@
 import child_process, { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { text, arrayBuffer } from "stream/consumers";
+import { text, arrayBuffer } from "node:stream/consumers";
 export const manifestFiles = new Set([
     ".npmrc",
     ".yarnrc.yaml",
@@ -217,6 +217,8 @@ export async function allocRunner({ name, description, install_pkg_manager, inst
                 "-c",
                 `
             rm -rf node_modules
+            rm -rf /root/.deno/cache
+            rm -rf ~/.bun/install/cache
             `
             ], {
                 stdio: "pipe",

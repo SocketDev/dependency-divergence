@@ -83,18 +83,19 @@ async function* runSuite(files: Map<string, Buffer>) {
   }
   // cold cache then warm cache
   for (const config of runners) {
-    let runnerAPI
-    try {
-      runnerAPI = await allocRunner(config)
-    } catch (e) {
-      yield {
-        type: "diagnostic",
-        message: `Failed to install ${config.name}`,
-        cause: e,
-      } as RunDiagnostic
-      continue
-    }
+    per_lockfile_config:
     for (const includeLockfiles of [false, true]) {
+      let runnerAPI
+      try {
+        runnerAPI = await allocRunner(config)
+      } catch (e) {
+        yield {
+          type: "diagnostic",
+          message: `Failed to install ${config.name}`,
+          cause: e,
+        } as RunDiagnostic
+        break per_lockfile_config
+      }
       // nicknames of cache scenarios
       // none - no node_modules, no global cache
       // warm - node_modules, global cache
@@ -214,8 +215,8 @@ async function* runSuite(files: Map<string, Buffer>) {
           results,
         } as RunResult
       }
+      await runnerAPI.cleanup()
     }
-    await runnerAPI.cleanup()
   }
 }
 

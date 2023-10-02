@@ -33,19 +33,19 @@ async function* runSuite(files) {
     }
     // cold cache then warm cache
     for (const config of runners) {
-        let runnerAPI;
-        try {
-            runnerAPI = await allocRunner(config);
-        }
-        catch (e) {
-            yield {
-                type: "diagnostic",
-                message: `Failed to install ${config.name}`,
-                cause: e,
-            };
-            continue;
-        }
-        for (const includeLockfiles of [false, true]) {
+        per_lockfile_config: for (const includeLockfiles of [false, true]) {
+            let runnerAPI;
+            try {
+                runnerAPI = await allocRunner(config);
+            }
+            catch (e) {
+                yield {
+                    type: "diagnostic",
+                    message: `Failed to install ${config.name}`,
+                    cause: e,
+                };
+                break per_lockfile_config;
+            }
             // nicknames of cache scenarios
             // none - no node_modules, no global cache
             // warm - node_modules, global cache
@@ -157,8 +157,8 @@ async function* runSuite(files) {
                     results,
                 };
             }
+            await runnerAPI.cleanup();
         }
-        await runnerAPI.cleanup();
     }
 }
 //#region ARGV
@@ -254,7 +254,6 @@ async function main() {
                     },
                     Math.ceil(time)
                 ]);
-                console.log({ resource_usage }, timeSection.slice(-1)[0]);
                 memorySection.push([
                     {
                         name: config,
