@@ -221,7 +221,6 @@ async function main() {
         return [l, await fs.readFile(resolved)];
     }));
     const files = new Map(entries);
-    let resource_table_headers = null;
     const elapsedTimes = new Map();
     const memoryAmounts = new Map();
     const diagnostic_table = [];
@@ -240,21 +239,29 @@ async function main() {
                 const memorySection = emplace(memoryAmounts, config, {
                     insert: () => []
                 });
+                const timeParts = resource_usage['elapsed_time'].split(/:/g);
+                let coefficient = 1000;
+                let time = 0;
+                while (timeParts.length) {
+                    time += coefficient * parseFloat(timeParts.pop());
+                    coefficient *= 60;
+                }
                 timeSection.push([
                     {
                         name: config,
                         cache,
                         includeLockfiles
                     },
-                    Math.ceil(parseInt(resource_usage['elapsed_time'], 10))
+                    Math.ceil(time)
                 ]);
+                console.log({ resource_usage }, timeSection.slice(-1)[0]);
                 memorySection.push([
                     {
                         name: config,
                         cache,
                         includeLockfiles
                     },
-                    Math.ceil(parseInt(resource_usage['max_mem'], 10))
+                    Math.ceil(parseFloat(resource_usage['max_mem']))
                 ]);
             }
         }
