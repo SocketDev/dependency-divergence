@@ -222,7 +222,8 @@ async function main() {
     }));
     const files = new Map(entries);
     let resource_table_headers = null;
-    const resource_table = [];
+    const elapsedTimes = new Map();
+    const memoryAmounts = new Map();
     const diagnostic_table = [];
     const installs = [];
     for await (const entry of runSuite(files)) {
@@ -233,23 +234,28 @@ async function main() {
             const { resource_usage, config, cache, includeLockfiles, results } = entry;
             installs.push(results);
             if (resource_usage) {
-                const insert = [
-                    config,
-                    String(includeLockfiles),
-                    String(cache.warmGlobalCache),
-                    String(cache.warmNodeModules),
-                    ...Object.values(resource_usage),
-                ];
-                if (!resource_table_headers) {
-                    resource_table_headers = [
-                        "package manager",
-                        "include lockfiles",
-                        "warm global cache",
-                        "warm node_modules",
-                        ...Object.keys(resource_usage),
-                    ];
-                }
-                resource_table.push(insert);
+                const timeSection = emplace(elapsedTimes, config, {
+                    insert: () => []
+                });
+                const memorySection = emplace(memoryAmounts, config, {
+                    insert: () => []
+                });
+                timeSection.push([
+                    {
+                        name: config,
+                        cache,
+                        includeLockfiles
+                    },
+                    Math.ceil(parseInt(resource_usage['elapsed_time'], 10))
+                ]);
+                memorySection.push([
+                    {
+                        name: config,
+                        cache,
+                        includeLockfiles
+                    },
+                    Math.ceil(parseInt(resource_usage['max_mem'], 10))
+                ]);
             }
         }
     }
@@ -368,16 +374,40 @@ async function main() {
                 .join("\n"));
         }
     }
-    if (resource_table_headers) {
+    if (elapsedTimes.size) {
         console.log("## Resource Usage");
-        console.log(resource_table_headers.join("|"));
-        console.log(resource_table_headers.map((_) => "----").join("|"));
-        console.log(resource_table
-            .sort((a, b) => {
-            return a[0] <= b[0] ? -1 : 1;
-        })
-            .map((row) => row.map(escapeNewlines).join("|"))
-            .join("\n"));
+        console.log('```mermaid');
+        console.log(`
+    gantt
+    Title ${'Elapsed Time'}
+    dateFormat  X
+    axisFormat %s
+
+    ${Array.from(elapsedTimes.entries(), ([section, rec]) => {
+            return `section ${section}
+          ${rec.map((r) => {
+                return `lockfiles=${r[0].includeLockfiles} warmGlobalCache=${r[0].cache.warmGlobalCache} warmNodeModules=${r[0].cache.warmNodeModules}: 0, ${r[1]}`;
+            }).join('\n')}
+        `;
+        }).join('\n')}
+    `);
+        console.log('```');
+        console.log('```mermaid');
+        console.log(`
+    gantt
+    Title ${'Max Memory Usage'}
+    dateFormat  X
+    axisFormat %s
+
+    ${Array.from(memoryAmounts.entries(), ([section, rec]) => {
+            return `section ${section}
+          ${rec.map((r) => {
+                return `lockfiles=${r[0].includeLockfiles} warmGlobalCache=${r[0].cache.warmGlobalCache} warmNodeModules=${r[0].cache.warmNodeModules}: 0, ${r[1]}`;
+            }).join('\n')}
+        `;
+        }).join('\n')}
+    `);
+        console.log('```');
     }
     if (diagnostic_table.length) {
         let diagnostic_table_headers = ["message", "details"];

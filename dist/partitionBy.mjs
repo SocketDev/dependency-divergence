@@ -38,6 +38,7 @@ export function partitionBy(arr, ...selects) {
     if (!buckets) {
         throw new Error('must include at least 1 selector');
     }
+    // not using Map.groupBy due to that creating extra Maps only to be thrown away
     let root = new Map();
     for (const item of arr) {
         // TS really doesn't like this kind of crawl
