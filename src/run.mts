@@ -287,7 +287,6 @@ async function main() {
     })
   )
   const files = new Map<string, Buffer>(entries)
-  let resource_table_headers: string[] | null = null
   const elapsedTimes: Map<keyof typeof allRunners, RunnerRecord<number>[]> = new Map()
   const memoryAmounts: Map<keyof typeof allRunners, RunnerRecord<number>[]> = new Map()
   const diagnostic_table = []
@@ -305,13 +304,20 @@ async function main() {
         const memorySection = emplace(memoryAmounts, config, {
           insert: () => [] as RunnerRecord<number>[]
         })
+        const timeParts = resource_usage['elapsed_time'].split(/:/g)
+        let coefficient = 1000
+        let time = 0
+        while (timeParts.length) {
+          time += coefficient * parseFloat(timeParts.pop()!)
+          coefficient *= 60
+        }
         timeSection.push([
           {
             name: config,
             cache, 
             includeLockfiles
           },
-          Math.ceil(parseInt(resource_usage['elapsed_time'], 10))
+          Math.ceil(time)
         ])
         memorySection.push([
           {
@@ -319,7 +325,7 @@ async function main() {
             cache, 
             includeLockfiles
           },
-          Math.ceil(parseInt(resource_usage['max_mem'], 10))
+          Math.ceil(parseFloat(resource_usage['max_mem']))
         ])
       }
     }
