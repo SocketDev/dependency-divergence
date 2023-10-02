@@ -9,7 +9,7 @@ jobs:
         if: ${{ github.event.label.name == 'compare' }}
         uses: "SocketDev/dependency-divergence/.github/workflows/compare.yml@main"
         with:
-            managers: "bun,npm"
+            managers: "bun,deno,npm,pnpm,yarn1,yarn3"
             cwd: "."
 
                 
